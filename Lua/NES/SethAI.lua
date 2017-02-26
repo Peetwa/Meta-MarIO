@@ -24,6 +24,7 @@ As well as what buttons are used
 --            //GlobalWin.MainForm.FrameBufferResized();
 --            GlobalWin.MainForm.PauseEmulator();
 --		}
+
 if gameinfo.getromname() == "Super Mario World (USA)" then
 	Filename = "DP1.state"
 	ButtonNames = {
@@ -106,6 +107,7 @@ DeltaThreshold = 1.0
 
 
 
+
 --[[
 StaleSpecies: The number till a species disappears if it doesn't improve
 MutateConnectionsChance: TODO:
@@ -150,6 +152,11 @@ NoveltyConstant=1
 CurrentNSFitness=0
 
 
+-- fitnesscore
+fitnesscheck={}
+for slot=0,2 do
+	fitnesscheck[slot]=0
+end
 --[[
 GetPostions: Return the postion of Mario Using in game Hex Bits
 --]]
@@ -1864,7 +1871,7 @@ end
 function WindowsFitnessBox()
 yvalue=25
 xvalue=25
-form = forms.newform(700, 600, "Fitness")
+form = forms.newform(700, 1300, "Fitness")
 --MaxFitness is the current Max
 maxFitnessLabel = forms.label(form, "Max Fitness: " .. math.floor(pool.maxFitness), incrementWindowsX(),yvalue)
 --A checkbox to see whether or not the eye(inputs) and controls(outputs) is shown
@@ -1940,7 +1947,20 @@ xvalue=0
 showContinousPlay = forms.checkbox(form, "Continous Play", incrementWindowsX(), yvalue)
 yvalue=incrementWindowsY()
 xvalue=0
-
+--How many orgranism can visit a spot and it still be unique
+WeightsLabel = forms.label(form, "Weights: ", incrementWindowsX(), yvalue)
+WeightsConstantText = forms.textbox(form, NoveltyConstant, 30, 20, nil, incrementWindowsX(), yvalue)
+--How many frames till an orgranism dies off if not reset by a fitness
+BiasLabel = forms.label(form, "Bias: ", incrementWindowsX(), yvalue)
+TimeoutConstantText = forms.textbox(form, TimeoutConstant, 30, 20, nil, incrementWindowsX(), yvalue)
+yvalue=incrementWindowsY()
+xvalue=0
+--Play from the beginning each time but if you reach a check point or level end change the start location to this
+--showDeterminedContinousPlay = forms.checkbox(form, "Determine Play", 120, 150)
+--Play from where the last orgranism left off
+showJigSaw = forms.checkbox(form, "JigSaw", incrementWindowsX(), yvalue)
+yvalue=incrementWindowsY()
+xvalue=0
 --Save the Network
 saveButton = forms.button(form, "Save", savePool, incrementWindowsX(), yvalue)
 --Load the Network
@@ -2152,6 +2172,9 @@ while true do
 			rightmost = marioX
 			if forms.ischecked(RightmostTimeout) then
 				timeout = tonumber(forms.gettext(TimeoutConstantText))
+				if forms.ischecked(showJigSaw) then
+					fitnesscheck[0] = tonumber(fitnesscheck[0] * math.log(forms.gettext.WeightsConstantText)/math.log(10) + forms.gettext.biasCell)
+					end
 			end
 		end
 
@@ -2167,10 +2190,6 @@ while true do
 		if timeout + timeoutBonus <= 0  or TimeoutAuto == true then
 			TimeoutAuto=false
 			local fitness = 0
-			local fitnesscheck={}
-			for slot=0,2 do
-			fitnesscheck[slot]=0
-			end
 			genome.ran=true
 
 			
